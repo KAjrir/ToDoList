@@ -1,0 +1,160 @@
+:root{
+    --font-color: #484242;
+    --sidebar-color: #d1c333;
+}
+
+@font-face{
+    font-family: "Josefin Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: "regular";
+    font-style: normal;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    height: 100dvh;
+}
+
+nav{
+    background-color: #fffcde;
+    position: fixed;
+    top: 0;
+    width: clamp(250px, 20vw, 350px);
+    p{
+        font-size: 1.5rem;
+    }
+}
+
+h1{
+    font-size: 2rem;
+}
+
+.sidebar{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    margin: 0 auto;
+    gap: 2rem;
+}
+
+.sidebar li{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    > svg{
+        padding-bottom: 3px;
+    }
+    button{
+        all: unset;
+    }
+}
+
+.upper-sidebar{
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2.5rem 0;
+}
+
+.sidebar-links > li{
+    padding: 8px 8px;
+}
+
+.sidebar-links > li:hover{
+    background-color: #fdf9c6;
+}
+
+.lower-sidebar{
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.projects{
+    display: grid;
+    gap: 0.5rem;
+}
+
+h1, h2, p, li, span, button{
+    color: var(--font-color);
+    font-family: "Josefin Sans", sans-serif;
+}
+
+.wrapper{
+    padding-left: clamp(250px, 20vw, 350px);
+}
+
+
+.title-bar{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #ccc;
+}
+
+.title-bar > button{
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.title-bar > button:hover{
+    color: var(--sidebar-color);
+}
+
+.main-content{
+    padding: 3rem 0 1rem 0;
+    height: 100%;
+    width: 70%;
+    margin: 0 auto;
+}
+
+.task-item-data{
+  display: grid;
+  gap: 0.8rem;  
+}
+
+.task-item{
+    padding: 1rem 0;
+    cursor: pointer;
+    border-bottom: 1px solid #ccc;
+}
+
+.task-item:last-child{
+    border: none;
+}
+
+.task-item > div{
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+}
+
+.task-description, .due-data > span{
+    font-size: 1rem;
+}
+
+.delete-task{
+    width: 22px;
+    height: 22px;
+    background-color: #ccc;
+    border: #ccc;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.delete-task:hover{
+    border: 2px solid #5e5e5e;
+}
+
+
+
