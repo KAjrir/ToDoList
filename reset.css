@@ -40,3 +40,11 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+
+/* added by me */
+
+input[type="date"] {
+	padding: 0.75rem;
+	font-size: 1rem;
+	cursor: pointer; /* optioneel */
+  }

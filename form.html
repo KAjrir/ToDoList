@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+
+        @font-face{
+            font-family: "Josefin Sans", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: "regular";
+            font-style: normal;
+        }
+        *{
+            margin: 0;
+            padding: 0;
+        }
+
+        form{
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid black;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            padding: 24px;
+        }
+
+        input, textarea, select{
+            padding: 8px;
+            border: 1px solid black;
+        }
+
+        form > *{
+            display: block;
+        }
+
+        button{
+            padding: 8px 16px;
+            background-color: #fffcde;
+            border: 1px solid black;
+            border-radius: 8px;
+        }
+
+        .buttons{
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input, input::placeholder, textarea, textarea::placeholder, select, option{
+            font-family: "Josefin Sans", sans-serif;
+            font-size: 1.5rem;
+        }
+    </style>
+    <script src="form.js" defer></script>
+</head>
+<body>
+    <form>
+        <form class="addTaskForm">
+            <input  type="text" name="title" id="title" placeholder="Title">
+            <textarea type="text" id="description" name="description" placeholder="Notes"></textarea>
+            <input  name="duedate" type="date">
+            <select name="priority" id="priority">
+                <option value="no_priority">No priority</option>
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+            </select>
+            <select name="projectname" id="projectname" required="true" selected="true"><option value="" disabled="true">Select Project</option><option value="">Tasks</option><optgroup label="My projects"><option value="Vacation">Vacation</option><option value="Leven terug">Leven terug</option></optgroup></select><div class="buttons">
+                <button type="button" value="cancel">Cancel</button>
+                <button type="submit" id="addTask">Add Task</button>
+            </div></form>
+
+</body>
+</html>
