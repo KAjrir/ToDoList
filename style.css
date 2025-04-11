@@ -161,8 +161,8 @@ h1, h2, p, li, span, button{
 .delete-task{
     width: 22px;
     height: 22px;
-    background-color: #ccc;
-    border: #ccc;
+    background-color: rgba(0, 0, 0, 0.113);
+    border: 1px solid #5e5e5e;
     border-radius: 50%;
     cursor: pointer;
 }

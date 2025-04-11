@@ -4,7 +4,7 @@ class ToDo {
     constructor(title, description, dueDate, priority, projectName = ""){
         this.title = title
         this.description = description
-        this.dueDate = new Date(dueDate).toLocaleDateString('en-US', {weekday: "short", month: "short", day: "numeric", year: "numeric"})
+        this.dueDate = new Date(dueDate).toLocaleDateString('nl-NL', {weekday: "short", month: "short", day: "numeric", year: "numeric"})
         this.priority = priority
         this.id = crypto.randomUUID()
         this.projectName = projectName
@@ -27,7 +27,7 @@ class ToDo {
     update({ title, description, dueDate, priority, projectName }) {
         if (title) this.title = title;
         if (description) this.description = description;
-        if (dueDate) this.dueDate = new Date(dueDate).toLocaleDateString('en-US', {weekday: "short", month: "short", day: "numeric", year: "numeric"});
+        if (dueDate) this.dueDate = new Date(dueDate).toLocaleDateString('nl-NL', {weekday: "short", month: "short", day: "numeric", year: "numeric"});
         if (priority) this.priority = priority;
         this.projectName = !projectName ? "" : projectName;
       }
@@ -227,7 +227,6 @@ const UiForProjectsSelection = () => {
     selectElement.setAttribute("required", true)
     
     const placeholder = document.createElement("option")
-    placeholder.setAttribute("value", "")
     placeholder.setAttribute("disabled", true)
     placeholder.textContent = "Select Project"
     selectElement.append(placeholder)
@@ -266,7 +265,7 @@ function addForm(e){
     <textarea type="text" id="description" name="description" placeholder="Notes"></textarea>
     <input required name="duedate" type="date">
     <select name="priority" id="priority">
-        <option value="">No priority</option>
+        <option value="no_priority">No priority</option>
         <option value="low">Low</option>
         <option value="normal">Normal</option>
         <option value="high">High</option>
@@ -345,15 +344,20 @@ document.querySelector(".tasks-container").addEventListener('click', (e) => {
     if(e.target.closest("li")){
         const id = e.target.closest(".task-item").getAttribute("data-id")
         const targetedToDo = ToDo.getTodoById(id)
+        const date = new Date(targetedToDo.dueDate)
+        year = date.getFullYear()
+        month = String(date.getMonth() + 1).padStart(2, "0")
+        day = String(date.getDate()).padStart(2, "0");
 
-        const formattedDate = (new Date(targetedToDo.dueDate)).toISOString().split("T")[0];
+        const formattedDate = `${year}-${month}-${day}`
+
         const form = document.createElement('form')
         form.classList.add("addTaskForm")
         form.innerHTML = `<input required type="text" name="title" value="${targetedToDo.title}" id="title" placeholder="Title">
         <textarea type="text" id="description" name="description" placeholder="Notes">${targetedToDo.description}</textarea>
         <input required name="dueDate" value="${formattedDate}" type="date">
         <select name="priority" id="priority">
-            <option value="">No priority</option>
+            <option value="no_priority">No priority</option>
             <option value="low">Low</option>
             <option value="normal">Normal</option>
             <option value="high">High</option>
@@ -365,7 +369,7 @@ document.querySelector(".tasks-container").addEventListener('click', (e) => {
         document.getElementById("overlay").insertAdjacentElement("beforebegin", form)
         UiForProjectsSelection()
         document.querySelector("#priority").value = targetedToDo.priority
-        document.querySelector("#projectName").value = targetedToDo.projectName
+        document.querySelector("#projectName").value = targetedToDo.projectName || "";
 
         overlay.classList.add("show")
 
