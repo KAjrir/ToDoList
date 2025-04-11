@@ -4,7 +4,7 @@ class ToDo {
     constructor(title, description, dueDate, priority, projectName = ""){
         this.title = title
         this.description = description
-        this.dueDate = new Date(dueDate).toLocaleDateString('en-US', {weekday: "short", month: "short", day: "numeric"})
+        this.dueDate = new Date(dueDate).toLocaleDateString('en-US', {weekday: "short", month: "short", day: "numeric", year: "numeric"})
         this.priority = priority
         this.id = crypto.randomUUID()
         this.projectName = projectName
@@ -19,6 +19,18 @@ class ToDo {
              ToDo.allTodos.splice(indexRemovableItem, 1)
         }
     }
+
+    static getTodoById(id){
+        return ToDo.allTodos.find(todo => todo.id === id)
+    }
+
+    update({ title, description, dueDate, priority, projectName }) {
+        if (title) this.title = title;
+        if (description) this.description = description;
+        if (dueDate) this.dueDate = new Date(dueDate).toLocaleDateString('en-US', {weekday: "short", month: "short", day: "numeric", year: "numeric"});
+        if (priority) this.priority = priority;
+        this.projectName = !projectName ? "" : projectName;
+      }
 
 }
 
@@ -37,6 +49,21 @@ class Project {
         this.toDoList.push(new ToDo(title, description, dueDate, priority, this.title))
     }
 
+    static updateToDo(targetedProject, id, toBeUpdatedProject, { title, description, dueDate, priority, projectName}) {
+        targetedProject.removeTodo(id)
+        !toBeUpdatedProject ? new ToDo(title, description, dueDate, priority) : toBeUpdatedProject.addTodo(title, description, dueDate, priority)
+    }
+
+    updateProjectName(title){
+        this.title = title
+    }
+
+    removeTodo(id){
+        const index = this.toDoList.findIndex(todo => todo.id === id)
+        this.todolist.splice(index, 1)
+        ToDo.removeTodo(id)
+    }
+
     get todolist(){
         return this.toDoList
     }
@@ -48,18 +75,37 @@ class Project {
     static removeProject(id) {
         const [removableItem] = Project.allProjects.filter(project => project.id === id)
         if(removableItem){
-             let indexRemovableItem = Project.allProjects.indexOf(removableItem)
-             Project.allProjects.splice(indexRemovableItem, 1)
+            removableItem.toDoList.forEach(todo => ToDo.removeTodo(todo.id))            
+            let indexRemovableItem = Project.allProjects.indexOf(removableItem)
+            Project.allProjects.splice(indexRemovableItem, 1)
+            UI.update()
         }
     }
 }
 
 class UI{
-    static renderToDos(projectName){
+    static renderToDos(projectName, todos){
         const tasksContainer = document.querySelector(".tasks-container > ul")
         tasksContainer.innerHTML = ""
+        const title = document.querySelector('.title-main')
+        let todosToBeRendered = [];
 
-        const todosToBeRendered = projectName === undefined ? ToDo.allTodos : ToDo.allTodos.filter(todo => todo.projectName === projectName)
+        if (projectName === undefined || projectName === ""){
+            todosToBeRendered = ToDo.allTodos
+            title.firstChild.textContent = "All Tasks"
+        }else if(projectName === "Overdue"){
+            todosToBeRendered = todos
+            title.firstChild.textContent = projectName
+        } else if(projectName){
+            todosToBeRendered = ToDo.allTodos.filter(todo => todo.projectName === projectName)
+            title.firstChild.textContent = projectName
+        }
+
+        let priorityColor = {
+            low: "#d1e1f4",
+            normal: "#ead1b3",
+            high: "#eec0c0"
+        }
 
         todosToBeRendered.forEach(todo => {
             const li = document.createElement('li')
@@ -67,7 +113,7 @@ class UI{
             li.setAttribute("data-id", todo.id)
             li.innerHTML = `
             <div>
-                <button class="delete-task" type="submit" role="checkbox"></button>
+                <button class="delete-task" style="background-color:${priorityColor[todo.priority]};" type="submit" role="checkbox"></button>
                 <div class="task-item-data">
                     <h3 class="task-title">${todo.title}</h3>
                     <p class="task-description">${todo.description}</p>
@@ -101,46 +147,83 @@ class UI{
             `
             projectContainer.append(li)
         })
-        projectContainer.insertAdjacentHTML("beforeend", `
-            <li data-task="createProject">+ Create a new project</li>
-          `);
     }
 
-    static renderNoteCount(projectName){
+    static renderNoteCount(projectName, todos){
         const counter = document.querySelector('.note-counter')
-        const todosToBeRendered = projectName === undefined ? ToDo.allTodos : ToDo.allTodos.filter(todo => todo.projectName === projectName)
-        counter.textContent = todosToBeRendered.length
+        let todosToBeRendered = []
+        if (projectName === undefined || projectName === ""){
+            todosToBeRendered = ToDo.allTodos
+        }else if(projectName === "Overdue"){
+            todosToBeRendered = todos
+        } else if(projectName){
+            todosToBeRendered = ToDo.allTodos.filter(todo => todo.projectName === projectName)
+        }
+        counter.textContent = ` (${todosToBeRendered.length})`
     }
 
-    static update(projectName){
-        this.renderToDos(projectName)
+    static update(projectName, todos){
+        this.renderToDos(projectName, todos)
         this.renderProjects()
-        this.renderNoteCount(projectName)
+        this.renderNoteCount(projectName, todos)
+        saveJson()
     }
 }
 
+function saveJson(){
+    localStorage.setItem("todos", JSON.stringify(ToDo.allTodos))
+    localStorage.setItem("projects", JSON.stringify(Project.allProjects))
+}
 
-const projectVacation = new Project("Vacation")
-const levenHerpakken = new Project("Leven terug")
+function loadJson(){
+    const todos = JSON.parse(localStorage.getItem("todos"))
+    const projects = JSON.parse(localStorage.getItem("projects"))
 
-projectVacation.addTodo("Backpack", "Laptop, 2 outfits, powerbank", new Date("12-25-2025"), "Urgent")
-projectVacation.addTodo("Reis", "Ticket, app downloaden, Koffer halen, verzekering afsluiten", new Date("12-31-2025"), "Urgent")
-projectVacation.addTodo("kados", "Youssef = telefoon, esma = schoolboeken, niger = outfitje", new Date("01-5-2026"), "Urgent")
+    if(!projects || !todos) return
 
-levenHerpakken.addTodo("Werk zoeken", "Meer solliciteren", new Date("09-13-2025"), "urgent")
-levenHerpakken.addTodo("Gym pakken", "Vaker naar de gym, Juiste gear halen", new Date("10-02-2025"), "normal")
-levenHerpakken.addTodo("Arabisch leren", "Vaker op Aljazeera", new Date("07-12-2025"), "low")
+    projects.forEach(project => {
+        const newProject = new Project(project.title)
+        project.toDoList.forEach(todo => {
+            newProject.addTodo(todo.title, todo.description, todo.dueDate, todo.priority)
+        })
+        console.log(newProject)
+    })
 
-const newToDo = new ToDo("Werk zoeken", "Meer solliciteren", new Date("09-13-2025"), "urgent")
+    console.log(projects)
+    todos.filter(todo => {
+        return !todo.projectName
+    }).forEach(todo => {
+        new ToDo(todo.title, todo.description, todo.dueDate, todo.priority, todo.projectName)
+    })
 
-UI.update()
+    UI.update()
+}
+
+// const projectVacation = new Project("Vacation")
+// const levenHerpakken = new Project("Leven terug")
+
+// projectVacation.addTodo("Backpack", "Laptop, 2 outfits, powerbank", new Date("12-25-2025"), "low")
+// projectVacation.addTodo("Reis", "Ticket, app downloaden, Koffer halen, verzekering afsluiten", new Date("02-31-2025"), "high")
+// projectVacation.addTodo("kados", "Youssef = telefoon, esma = schoolboeken, niger = outfitje", new Date("01-5-2026"), "normal")
+// levenHerpakken.addTodo("Werk zoeken", "Meer solliciteren", new Date("01-13-2025"), "normal")
+
+// const newToDo = new ToDo("Werk zoeken", "Meer solliciteren", new Date("05-21-2025"), "high")
+
+// levenHerpakken.addTodo("Gym pakken", "Vaker naar de gym, Juiste gear halen", new Date("10-02-2025"), "normal")
+// levenHerpakken.addTodo("Arabisch leren", "Vaker op Aljazeera", new Date("01-12-2025"), "low")
+
+
+loadJson()
 
 
 const addTaskButtons = document.querySelectorAll('[data-id = addTask]')
+const createProjectButton = document.querySelector('[data-task = createProject]')
+const overlay = document.getElementById("overlay")
+
 const UiForProjectsSelection = () => {
     const selectElement = document.createElement("select")
-    selectElement.setAttribute("name", "projectname")
-    selectElement.setAttribute("id", "projectname")
+    selectElement.setAttribute("name", "projectName")
+    selectElement.setAttribute("id", "projectName")
     selectElement.setAttribute("required", true)
     
     const placeholder = document.createElement("option")
@@ -174,6 +257,9 @@ function addForm(e){
     addTaskButtons.forEach(button => {
         button.dataset.switch = "true"
     })
+    createProjectButton.dataset.switch = "true"
+    overlay.classList.add("show")
+
     const form = document.createElement('form')
     form.classList.add("addTaskForm")
     form.innerHTML = `<input required type="text" name="title" id="title" placeholder="Title">
@@ -189,14 +275,18 @@ function addForm(e){
         <button type="button" value="cancel">Cancel</button>
         <button type="submit" id="addTask">Add Task</button>
     </div>`
-    
-    document.body.appendChild(form)
+    document.getElementById("overlay").insertAdjacentElement("beforebegin", form)
+
     const cancelButton = document.querySelector("[value=cancel]")
     cancelButton.addEventListener('click', (e) => {
         form.remove()
         addTaskButtons.forEach(button => {
             button.dataset.switch = "false"
         })
+        createProjectButton.dataset.switch = "false"
+        overlay.classList.remove("show")
+
+
     })
 
     form.addEventListener("submit", (e) => {
@@ -210,8 +300,8 @@ function addForm(e){
             obj[key] = value;
         }
 
-        if( obj.projectname ){
-                const project = Project.getProjectByName(obj.projectname)
+        if( obj.projectName ){
+                const project = Project.getProjectByName(obj.projectName)
                 project.addTodo(obj.title, obj.description, obj.duedate, obj.priority)
         } else (
             new ToDo(obj.title, obj.description, obj.duedate, obj.priority)
@@ -220,6 +310,9 @@ function addForm(e){
         addTaskButtons.forEach(button => {
             button.dataset.switch = "false"
         })
+        createProjectButton.dataset.switch = "false"
+        overlay.classList.remove("show")
+
         form.remove();
 
 
@@ -229,41 +322,259 @@ addTaskButtons.forEach(button => {
     button.addEventListener("click", () => {
         if(button.dataset.switch === "false"){
             addForm()
+            UiForProjectsSelection()
         }
-        UiForProjectsSelection()
 })
 })
 
+
+
+// Removing todos and renaming todos
+
+
 document.querySelector(".tasks-container").addEventListener('click', (e) => {
-    const targetedLi = e.target.closest("li")
-    const idOfLi = targetedLi.getAttribute("data-id")
-    console.log(idOfLi)
-    ToDo.removeTodo(idOfLi)
-    UI.update()
+    if(e.target.closest(".delete-task")){
+        const targetedLi = e.target.closest("li")
+        const idOfLi = targetedLi?.getAttribute("data-id")
+        const [filteredProject] = Project.allProjects.filter(project => project.toDoList.some(todo => todo.id === idOfLi))
+        filteredProject ? filteredProject.removeTodo(idOfLi) : ToDo.removeTodo(idOfLi)
+        UI.update()
+        return
+    }
+    
+    if(e.target.closest("li")){
+        const id = e.target.closest(".task-item").getAttribute("data-id")
+        const targetedToDo = ToDo.getTodoById(id)
+
+        const formattedDate = (new Date(targetedToDo.dueDate)).toISOString().split("T")[0];
+        const form = document.createElement('form')
+        form.classList.add("addTaskForm")
+        form.innerHTML = `<input required type="text" name="title" value="${targetedToDo.title}" id="title" placeholder="Title">
+        <textarea type="text" id="description" name="description" placeholder="Notes">${targetedToDo.description}</textarea>
+        <input required name="dueDate" value="${formattedDate}" type="date">
+        <select name="priority" id="priority">
+            <option value="">No priority</option>
+            <option value="low">Low</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+        </select>
+        <div class="buttons">
+            <button type="button" value="cancel">Cancel</button>
+            <button type="submit" id="addTask">Change Task</button>
+        </div>`
+        document.getElementById("overlay").insertAdjacentElement("beforebegin", form)
+        UiForProjectsSelection()
+        document.querySelector("#priority").value = targetedToDo.priority
+        document.querySelector("#projectName").value = targetedToDo.projectName
+
+        overlay.classList.add("show")
+
+
+
+        const cancelButton = document.querySelector("[value=cancel]")
+        cancelButton.addEventListener('click', (e) => {
+            form.remove()
+            overlay.classList.remove("show")
+
+        })
+
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault()
+
+            let obj = {}
+
+            const formData = new FormData(form)
+            
+            for (const [key, value] of formData) {
+                obj[key] = value;
+            }
+
+            if(targetedToDo.projectName === "" && obj.projectName){
+                ToDo.removeTodo(id)
+                const project =  Project.getProjectByName(obj.projectName)
+                project.addTodo(obj.title, obj.description, obj.dueDate, obj.priority)
+            }else if(targetedToDo.projectName !== obj.projectName){
+                const project1 = Project.getProjectByName(targetedToDo.projectName)
+                const project2 = Project.getProjectByName(obj.projectName)
+                Project.updateToDo(project1, id, project2, obj)
+            }else{
+                targetedToDo.update(obj)
+            }
+            
+            UI.update()
+
+            overlay.classList.remove("show")
+            form.remove();
+
+
+        })
+        return
+    }
 })
 
 const projectContainer = document.querySelector(".projects")
 
 projectContainer.addEventListener('click', (e) => {
-    const li = e.target.closest('li')
-    const projectSettings = e.target.closest('.project-settings')
-
-    // if(projectSettings){
-    //     console.log("maniak SPAN")
-    // }
-
-    if(li.dataset.id) {
-        const projectName = li.querySelector(".project-title").textContent.trim()
-        UI.update(projectName)
+    // Check if a project setting (SVG) was clicked
+    if (e.target.closest("svg")) {
+      const li = e.target.closest('.project');
+      const projectID = li.getAttribute('data-id');
+  
+      // Only add the menu if it doesn't exist already
+      if (!li.querySelector('.project-menu')) {
+        li.insertAdjacentHTML("beforeend", `<div class="project-menu">
+            <button class="delete-project" data-id="${projectID}">Delete</button>
+            <button class="rename-project" data-id="${projectID}">Rename</button>
+        </div>`);
+      }
+      return; // Stop further processing
     }
-
+  
+    // Delegate click for delete project button
+    if (e.target.matches('.delete-project')) {
+      const projectID = e.target.getAttribute('data-id');
+      Project.removeProject(projectID);
+      return;
+    }
     
+    // Delegate click for rename project button
+    if (e.target.matches('.rename-project')) {
+        overlay.classList.add("show")
+        const li = e.target.closest('li')
+        const projectTitle = li.querySelector(".project-title").textContent
+        console.log(projectTitle)
+        
+        const form = document.createElement('form')
+        form.classList.add("addTaskForm")
+        form.innerHTML = `
+            <input required type="text" name="title" id="title" placeholder="Project name">
+            <div class="buttons">
+                <button type="button" value="cancel">Cancel</button>
+                <button type="submit" id="addTask">Change Project name</button>
+            </div>`
+
+        document.getElementById("overlay").insertAdjacentElement("beforebegin", form)
+        document.querySelector('.project-menu').remove()
+      
+        const cancelButton = document.querySelector("[value=cancel]")
+        cancelButton.addEventListener('click', (e) => {
+            form.remove()
+        
+            createProjectButton.dataset.switch = "false"
+            overlay.classList.remove("show")
+
+        })
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        let obj = {}
+
+        const formData = new FormData(form)
+        
+        for (const [key, value] of formData) {
+            obj[key] = value;
+        }
 
 
-})
+        const project = Project.getProjectByName(projectTitle)
+
+        project.updateProjectName(obj.title)
+        project.toDoList.forEach(todo => todo.projectName = obj.title)
+
+        UI.update(obj.title)
+        
+        addTaskButtons.forEach(button => {
+            button.dataset.switch = "false"
+        })
+        createProjectButton.dataset.switch = "false"
+        overlay.classList.remove("show")
+
+        form.remove();
+    })
+      return;
+    }
+  
+    // If a project li is clicked (but not on the SVG or the menu buttons)
+    const li = e.target.closest('.project');
+    if (li && li.dataset.id) {
+      const projectName = li.querySelector(".project-title").textContent.trim();
+      UI.update(projectName);
+    }
+  });
 
 const viewAllTasksButton = document.querySelector("[data-id = showAllTasks]")
 
 viewAllTasksButton.addEventListener("click", (e) => {
+
     UI.update()
 })
+
+createProjectButton.addEventListener('click', (e) => {
+    if(createProjectButton.dataset.switch === "true") return
+    addTaskButtons.forEach(button => {
+        button.dataset.switch = "true"
+    })
+    createProjectButton.dataset.switch = "true"
+        overlay.classList.add("show")
+
+
+    const form = document.createElement('form')
+    form.classList.add("addTaskForm")
+    form.innerHTML = `
+    <input required type="text" name="title" id="title" placeholder="Project name">
+    <div class="buttons">
+        <button type="button" value="cancel">Cancel</button>
+        <button type="submit" id="addTask">Add Project</button>
+    </div>`
+
+    document.getElementById("overlay").insertAdjacentElement("beforebegin", form)
+
+    const cancelButton = document.querySelector("[value=cancel]")
+    cancelButton.addEventListener('click', (e) => {
+        form.remove()
+        addTaskButtons.forEach(button => {
+            button.dataset.switch = "false"
+        })
+        createProjectButton.dataset.switch = "false"
+        overlay.classList.remove("show")
+
+    })
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        let obj = {}
+
+        const formData = new FormData(form)
+        
+        for (const [key, value] of formData) {
+            obj[key] = value;
+        }
+
+        
+        new Project(obj.title)
+        UI.update()
+        
+        addTaskButtons.forEach(button => {
+            button.dataset.switch = "false"
+        })
+        createProjectButton.dataset.switch = "false"
+        overlay.classList.remove("show")
+
+        form.remove();
+    })
+})
+
+document.querySelector("[data-id=overdueTasks]").addEventListener('click', (e) => {
+    const displayedTodos = ToDo.allTodos.filter(todo => {
+        const timeInMiliSeconds = Date.parse(todo.dueDate)
+        if (timeInMiliSeconds < Date.now()) {
+            return true
+        }
+    })
+    UI.update("Overdue", displayedTodos)
+})
+
+

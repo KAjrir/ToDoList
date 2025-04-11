@@ -71,11 +71,14 @@ h1{
     padding: 2.5rem 0;
 }
 
-.sidebar-links > li{
+.sidebar-links > li,
+.createProject{
     padding: 8px 8px;
 }
 
-.sidebar-links > li:hover, .sidebar button:hover{
+.sidebar-links > li:hover, 
+.sidebar button:hover,
+.createProject:hover{
     background-color: #fdf9c6;
 }
 
@@ -177,6 +180,7 @@ h1, h2, p, li, span, button{
     gap: 8px;
     border: 1px solid black;
     position: fixed;
+    z-index: 10;
     top: 50%;
     left: 50%;
     transform: translate(-50%,-50%);
@@ -225,6 +229,7 @@ input, textarea, select{
 }
 
 .project{
+    position: relative;
     display: flex;
     justify-content: left;
     align-items: center;
@@ -239,9 +244,14 @@ input, textarea, select{
     display: none;
     background: none;
     border: none;
+    border-radius: 5px;
     font-size: 1.2rem;
     cursor: pointer;
     transition: opacity 0.1s ease;
+}
+
+.project-settings:hover{
+    background-color: #f1ebba;
 }
 
 
@@ -252,26 +262,46 @@ input, textarea, select{
 .project:hover .project-settings {
     display: inline-flex;
   }
-  
 
+
+.project-menu{
+    display: flex;
+    font-size: 1rem;
+    border: 0.5px solid #cccccc;
+    gap: 4px;
+    flex-direction: column;
+    position: absolute;
+    padding: 0.3rem;
+    background-color: #fffbcf;
+    top: -50px;
+    right: 0;
+    cursor: pointer;
+}
   
-  input[type="date"] {
-      box-sizing: border-box;
-      outline: 0;
-      padding: .75rem;
-      position: relative;
-      width: 100%;
-  }
-  
-  input[type="date"]::-webkit-calendar-picker-indicator {
-      background: transparent;
-      bottom: 0;
-      color: transparent;
-      cursor: pointer;
-      height: auto;
-      left: 0;
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: auto;
-  }
+input[type="date"] {
+    box-sizing: border-box;
+    outline: 0;
+    padding: .75rem;
+    position: relative;
+    width: 100%;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+}
+
+#overlay.show{
+    position: fixed;
+    z-index: 9;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
